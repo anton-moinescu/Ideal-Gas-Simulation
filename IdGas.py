@@ -28,7 +28,7 @@ L=10
 l=10
 N=1000
 V=1
-r=1
+r=0.1
 T=1000
 dt=0.1
 F=T/dt
@@ -78,8 +78,8 @@ def condcol(x1, y1, x2, y2, vx1, vy1, vx2, vy2):
     d=distance(x1,y1,x2,y2)
     futured=distance(x1+vx1*dt,y1+vy1*dt,x2+vx2*dt,y2+vy2*dt)
     if(d<=2*r and futured<d):
-        return 1
         print("Collision detected")
+        return 1
     else:
         return 0
 
@@ -123,8 +123,6 @@ vx=v*np.cos(np.radians(deg))
 vy=v*np.sin(np.radians(deg))
 #print(vx)
 #print(vy)
-for i in range(0,N):
-    v[i]=math.sqrt(vx[i]*vx[i]+vy[i]*vy[i])
 #print(v)
 
 #for initial positions:
@@ -141,12 +139,12 @@ def position_updates(x, y, vx, vy):
         if(cond4(x[i], vx[i])==1):
             vx[i]=-vx[i]
 
-    for j in range(i+1,N):
-        if(condcol(x[i], y[i], x[j], y[j], vx[i], vy[i], vx[j], vy[j])==1):
-            vx[i]=V1x_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
-            vy[i]=V1y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
-            vx[j]=V2x_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
-            vy[j]=V2y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
+        for j in range(i+1,N):
+            if(condcol(x[i], y[i], x[j], y[j], vx[i], vy[i], vx[j], vy[j])==1):
+                vx[i]=V1x_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
+                vy[i]=V1y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
+                vx[j]=V2x_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
+                vy[j]=V2y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
 
 
     x=x+vx*dt
@@ -171,7 +169,7 @@ def animate(frame):
     # Update the positions of the particles
     x, y, vx, vy, v = position_updates(x, y, vx, vy)
     # Update the scatter plot with the new positions
-    particles.set_offsets(np.c_[x[50], y[50]])
+    particles.set_offsets(np.c_[x, y])
 
     ax2.cla()  # Clear the previous histogram
     ax2.hist(v, bins=bins, range=(0, np.max(v)), color='green', alpha=0.7)
