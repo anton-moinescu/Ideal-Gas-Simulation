@@ -78,7 +78,7 @@ def condcol(x1, y1, x2, y2, vx1, vy1, vx2, vy2):
     d=distance(x1,y1,x2,y2)
     futured=distance(x1+vx1*dt,y1+vy1*dt,x2+vx2*dt,y2+vy2*dt)
     if(d<=2*r and futured<d):
-        print("Collision detected")
+        #print("Collision detected")
         return 1
     else:
         return 0
@@ -145,43 +145,42 @@ def position_updates(x, y, vx, vy):
                 vy[i]=V1y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
                 vx[j]=V2x_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
                 vy[j]=V2y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
+                v[i]=np.sqrt(vx[i]*vx[i]+vy[i]*vy[i])
+                v[j]=np.sqrt(vx[j]*vx[j]+vy[j]*vy[j])
 
 
     x=x+vx*dt
     y=y+vy*dt
     #print(x[50])
-    v=np.sqrt(vx*vx+vy*vy)
     return x, y, vx, vy, v
 
 
-fig, (ax1,ax2) = plt.subplots(1, 2, figsize=(10, 5))
-ax1.set_xlim(0, L)
-ax1.set_ylim(0, l)
-particles = ax1.scatter(x, y, s=r*100, color='blue')
+fig, ax = plt.subplots()
+
 
 ##de revenit si fct 2 vers- una in care calc dinainte tot, una cum face gpt
-histogram = ax2.hist(v, bins=bins, range=(0, np.max(v)), color='green', alpha=0.7)
-ax2.set_xlim(0, np.max(v))
-ax2.set_ylim(0, N//2)
+n, bins, patches = ax.hist(v, bins=bins, range=(0, np.max(v)), color='green', alpha=0.7)
+ax.set_xlim(0, V)
+ax.set_ylim(0, N//2)
+ax.set_xlabel('Speed')
+ax.set_ylabel('Number of Particles')
+ax.set_title('Speed Distribution')
 
 def animate(frame):
     global x, y, vx, vy, v
     # Update the positions of the particles
     x, y, vx, vy, v = position_updates(x, y, vx, vy)
-    # Update the scatter plot with the new positions
-    particles.set_offsets(np.c_[x, y])
-
-    ax2.cla()  # Clear the previous histogram
-    ax2.hist(v, bins=bins, range=(0, np.max(v)), color='green', alpha=0.7)
-    ax2.set_xlim(0, np.max(v))
-    ax2.set_ylim(0, N // 2)  # Adjust depending on the distribution
-    ax2.set_xlabel('Speed')
-    ax2.set_ylabel('Number of Particles')
-    ax2.set_title('Speed Distribution')
+    ax.cla()  # Clear the previous histogram
+    ax.hist(v, bins=bins, range=(0, np.max(v)), color='green', alpha=0.7)
+    ax.set_xlim(0, V)
+    ax.set_ylim(0, N//2)
+    #ax.set_xlabel('Speed')
+    #ax.set_ylabel('Number of Particles')
+    #ax.set_title('Speed Distribution')
     # Return the modified plot elements
-    return [particles]
+    return ()
 
-anim = FuncAnimation(fig, animate, frames=1000, interval=10, blit=True)
+anim = FuncAnimation(fig, animate, frames=1000, interval=50, blit=True)
 
 plt.show()
 
