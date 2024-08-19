@@ -33,84 +33,63 @@ T=1000
 dt=0.1
 F=T/dt
 bins = 60
-"""
-class Particles():
+
+class Particle:
     def __init__(self, x, y, vx, vy):
         self.x=x
         self.y=y
         self.vx=vx
         self.vy=vy
-    def lateral_collision(self):
+##Wall collision- condition: if the distance between the center of a particle and the wall is smaller than the radius and the particle is moving towards wall
+    def lateral_wall_collision(self):
         if((L-self.x<=r and self.vx>0) or (self.x<r and self.vx<0 )):
             self.vx=-self.vx
-            return()
-"""
-##Wall collision- condition: if the distance between the center of a particle and the wall is smaller than the radius and the particle is moving towards certain wall + velocity condition
 
-#1-upper wall
-#2-right wall
-#3-lower wall
-#4-left wall
+    def upper_lower_wall_collision(self):
+        if ((l-self.y<=r and self.vy>0)or (self.y<=r and self.vy<0)):
+            self.vy=-self.vy
 
-#Wall collision condition
-def collision_lateral_walls(x, vx):
-    if((L-x<=r and vx>0) or (x<r and vx<0 )):
-        return 1
-    else:
-        return 0
+    def distance(self, other_particle):
+        return np.sqrt((self.x-other_particle.x)*(self.x-other_particle.x)+(self.y-other_particle.y)*(self.y-other_particle.y))
 
-def collision_upper_lower_walls(y, vy):
-    if ((l-y<=r and vy>0)or (y<=r and vy<0)):
-        return 1
-    else:
-        return 0
+    def interm_dot_prod(self, other_particle):
+        vrel=np.array([self.vx-other_particle.vx,self.vy-other_particle.vy])
+        drelvect=np.array([self.x-other_particle.x,self.y-other_particle.y])
+        dot_prod=np.dot(vrel,drelvect)
+        drelscal=self.distance(other_particle)
+        interm=dot_prod/(drelscal*drelscal)
+        return interm
 
+    def V1x_after_col(self, other_particle):
+        interm=self.interm_dot_prod(other_particle)
+        vx1after=self.vx-interm*(self.x-other_particle.x)
+        self.vx= vx1after
 
-def distance(x1,y1,x2,y2):
-    return np.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))
+    def V1y_after_col(self, other_particle):
+        interm=self.interm_dot_prod(other_particle)
+        vy1after=self.vy-interm*(self.y-other_particle.y)
+        self.vy= vy1after
 
-#particle collision condition
-def condcol(x1, y1, x2, y2, vx1, vy1, vx2, vy2):
-    d=distance(x1,y1,x2,y2)
-    if(d<=2*r):
-        if(distance(x1+vx1*dt,y1+vy1*dt,x2+vx2*dt,y2+vy2*dt)<d):
-        #print("Collision detected")
-            return 1
-    else:
-        return 0
+    def V2x_after_col(self, other_particle):
+        interm=self.interm_dot_prod(other_particle)
+        vx2after=self.vx+interm*(self.x-other_particle.x)
+        other_particle.vx= vx2after
 
-def modrelV(v1x,v1y,v2x,v2y):
-    v=math.sqrt((v1x-v2x)*(v1x-v2x)+(v1y-v2y)*(v1y-v2y))
-    return v
+    def V2y_after_col(self, other_particle):
+        interm=self.interm_dot_prod(other_particle)
+        vy2after=self.vy+interm*(self.y-other_particle.y)
+        other_particlevy= vy2after
 
-##used for the velocities after collision:
-def interm_dot_prod(x1,y1,x2,y2,vx1,vy1,vx2,vy2):
-    vrel=np.array([vx1-vx2,vy1-vy2])
-    drelvect=np.array([x1-x2,y1-y2])
-    dot_prod=np.dot(vrel,drelvect)
-    drelscal=distance(x1,y1,x2,y2)
-    interm=dot_prod/(drelscal*drelscal)
-    return interm
+    def condcol(self, other_particle):
+        d=self.distance (other_particle)
+        if(d<=2*r):
+            if(np.sqrt(((self.x+self.vx*dt)-(other_particle.x+other_particle.vx*dt))**2+
+                    (self.y+self.vy*dt-(other_particle.y+other_particle.vy*dt))**2)<d):
+            #print("Collision detected")
+                return True
+        else:
+            return False
 
-def V1x_after_col(x1,y1,x2,y2,vx1,vy1,vx2,vy2):
-    interm=interm_dot_prod(x1,y1,x2,y2,vx1,vy1,vx2,vy2)
-    vx1after=vx1-interm*(x1-x2)
-    return vx1after
-
-def V1y_after_col(x1,y1,x2,y2,vx1,vy1,vx2,vy2):
-    interm=interm_dot_prod(x1,y1,x2,y2,vx1,vy1,vx2,vy2)
-    vy1after=vy1-interm*(y1-y2)
-    return vy1after
-
-def V2x_after_col(x1,y1,x2,y2,vx1,vy1,vx2,vy2):
-    interm=interm_dot_prod(x1,y1,x2,y2,vx1,vy1,vx2,vy2)
-    vx2after=vx2+interm*(x1-x2)
-    return vx2after
-
-def V2y_after_col(x1,y1,x2,y2,vx1,vy1,vx2,vy2):
-    interm=interm_dot_prod(x1,y1,x2,y2,vx1,vy1,vx2,vy2)
-    vy2after=vy2+interm*(y1-y2)
-    return vy2after
 
 #for intial velocity
 deg=360*np.random.random(N)
@@ -124,27 +103,31 @@ vy=v*np.sin(np.radians(deg))
 #for initial positions:
 x=r+(L-r)*np.random.random(N)
 y=r+(l-r)*np.random.random(N)
-def position_and_velocity_updates(x, y, vx, vy):
+
+#defining the particles array
+particles_list=[]
+for j in range (0,N):
+    particles_list.append(Particle(x[j], y[j], vx[j], vy[j]))
+
+def position_and_velocity_updates(particles_list, v):
     for i in range(0, N):
-        if(collision_upper_lower_walls(y[i], vy[i])==1):
-            vy[i]=-vy[i]
-        if(collision_lateral_walls(x[i], vx[i])==1):
-            vx[i]=-vx[i]
+        particles_list[i].lateral_wall_collision()
+        particles_list[i].upper_lower_wall_collision()
 
         for j in range(i+1,N):
-            if(condcol(x[i], y[i], x[j], y[j], vx[i], vy[i], vx[j], vy[j])==1):
-                vx[i]=V1x_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
-                vy[i]=V1y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
-                vx[j]=V2x_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
-                vy[j]=V2y_after_col(x[i],y[i],x[j],y[j],vx[i],vy[i],vx[j],vy[j])
-                v[i]=np.sqrt(vx[i]*vx[i]+vy[i]*vy[i])
-                v[j]=np.sqrt(vx[j]*vx[j]+vy[j]*vy[j])
+            if(particles_list[i].condcol(particles_list[j])):
+                particles_list[i].V1x_after_col(particles_list[j])
+                particles_list[i].V1y_after_col(particles_list[j])
+                particles_list[i].V2x_after_col(particles_list[j])
+                particles_list[i].V2y_after_col(particles_list[j])
+                v[i]=np.sqrt(particles_list[i].vx**2+particles_list[i].vy**2)
+                v[j]=np.sqrt(particles_list[j].vx**2+particles_list[j].vy**2)
 
+        particles_list[i].x=particles_list[i].x+particles_list[i].vx*dt
+        particles_list[i].y=particles_list[i].y+particles_list[i].vy*dt
 
-    x=x+vx*dt
-    y=y+vy*dt
     #print(x[50])
-    return x, y, vx, vy, v
+    return  v, particles_list
 
 
 fig, ax = plt.subplots()
@@ -159,9 +142,9 @@ ax.set_ylabel('Number of Particles')
 ax.set_title('Speed Distribution')
 
 def animate(frame):
-    global x, y, vx, vy, v
+    global v, particles_list
     # Update the positions of the particles
-    x, y, vx, vy, v = position_and_velocity_updates(x, y, vx, vy)
+    v, particles_list = position_and_velocity_updates(particles_list, v)
     ax.cla()  # Clear the previous histogram
     ax.hist(v, bins=bins, range=(0, np.max(v)), color='green', alpha=0.7)
     ax.set_xlim(0, V)
